@@ -13,10 +13,10 @@ namespace Stripe
         public string Brand { get; set; }
 
         [JsonProperty("exp_month")]
-        public string ExpirationMonth { get; set; }
+        public int ExpirationMonth { get; set; }
 
         [JsonProperty("exp_year")]
-        public string ExpirationYear { get; set; }
+        public int ExpirationYear { get; set; }
 
         [JsonProperty("funding")]
         public string Funding { get; set; }
@@ -48,6 +48,9 @@ namespace Stripe
         [JsonProperty("address_zip_check")]
         public string AddressZipCheck { get; set; }
 
+        [JsonProperty("available_payout_methods")]
+        public string[] AvailablePayoutMethods { get; set; }
+
         [JsonProperty("country")]
         public string Country { get; set; }
 
@@ -64,7 +67,7 @@ namespace Stripe
         public string Name { get; set; }
 
         [JsonProperty("three_d_secure")]
-        public Dictionary<string, string> ThreeDSecure { get; set; }
+        public string ThreeDSecure { get; set; }
 
         [JsonProperty("tokenization_method")]
         public string TokenizationMethod { get; set; }
@@ -83,7 +86,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeRecipient>.Map(value, s => RecipientId = s, o => Recipient = o);
+                StringOrObject<StripeRecipient>.Map(value, s => RecipientId = s, o => Recipient = o);
             }
         }
         #endregion
@@ -99,7 +102,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeCustomer>.Map(value, s => CustomerId = s, o => Customer = o);
+                StringOrObject<StripeCustomer>.Map(value, s => CustomerId = s, o => Customer = o);
             }
         }
         #endregion
@@ -115,7 +118,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeAccount>.Map(value, s => AccountId = s, o => Account = o);
+                StringOrObject<StripeAccount>.Map(value, s => AccountId = s, o => Account = o);
             }
         }
         #endregion

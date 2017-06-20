@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Stripe.Infrastructure;
 
@@ -16,7 +15,10 @@ namespace Stripe
         public bool ExpandInvoice { get; set; }
         public bool ExpandReview { get; set; }
         public bool ExpandTransfer { get; set; }
-
+        public bool ExpandOnBehalfOf { get; set; }
+        public bool ExpandSourceTransfer { get; set; }
+        public bool ExpandDispute { get; set; }
+        public bool ExpandOutcome { get; set; }
 
 
         //Sync
@@ -44,9 +46,9 @@ namespace Stripe
             );
         }
 
-        public virtual IEnumerable<StripeCharge> List(StripeChargeListOptions listOptions = null, StripeRequestOptions requestOptions = null)
+        public virtual StripeList<StripeCharge> List(StripeChargeListOptions listOptions = null, StripeRequestOptions requestOptions = null)
         {
-            return Mapper<StripeCharge>.MapCollectionFromJson(
+            return Mapper<StripeList<StripeCharge>>.MapFromJson(
                 Requestor.GetString(this.ApplyAllParameters(listOptions, Urls.Charges, true),
                 SetupRequestOptions(requestOptions))
             );
@@ -97,12 +99,12 @@ namespace Stripe
             );
         }
 
-        public virtual async Task<IEnumerable<StripeCharge>> ListAsync(StripeChargeListOptions listOptions = null, StripeRequestOptions requestOptions = null, CancellationToken cancellationToken = default(CancellationToken))
+        public virtual async Task<StripeList<StripeCharge>> ListAsync(StripeChargeListOptions listOptions = null, StripeRequestOptions requestOptions = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Mapper<StripeCharge>.MapCollectionFromJson(
+            return Mapper<StripeList<StripeCharge>>.MapFromJson(
                 await Requestor.GetStringAsync(this.ApplyAllParameters(listOptions, Urls.Charges, true),
-                SetupRequestOptions(requestOptions),
-                cancellationToken)
+                    SetupRequestOptions(requestOptions),
+                    cancellationToken)
             );
         }
 

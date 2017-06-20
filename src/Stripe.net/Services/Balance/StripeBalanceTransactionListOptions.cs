@@ -13,13 +13,16 @@ namespace Stripe
         [JsonProperty("currency")]
         public string Currency { get; set; }
 
+        [JsonProperty("payout")]
+        public string PayoutId { get; set; }
+
         [JsonProperty("source")]
         public string SourceId { get; set; }
 
-        [JsonProperty("transfer")]
-        public string TransferId { get; set; }
-
         [JsonProperty("type")]
         public string Type { get; set; }
+
+        [JsonProperty("include_total_count")]
+        public bool IncludeTotalCount { get; set; }
     }
 }

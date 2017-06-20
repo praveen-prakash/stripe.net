@@ -55,7 +55,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<CustomerBankAccount>.Map(value, s => DefaultCustomerBankAccountId = s, o => DefaultCustomerBankAccount = o);
+                StringOrObject<CustomerBankAccount>.Map(value, s => DefaultCustomerBankAccountId = s, o => DefaultCustomerBankAccount = o);
             }
         }
         #endregion
@@ -68,7 +68,6 @@ namespace Stripe
         public string DefaultSourceId { get; set; }
 
         [JsonIgnore]
-        [JsonConverter(typeof(SourceConverter))]
         public Source DefaultSource { get; set; }
 
         [JsonProperty("default_source")]
@@ -76,7 +75,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<Source>.Map(value, s => DefaultSourceId = s, o => DefaultSource = o);
+                StringOrObject<Source>.Map(value, s => DefaultSourceId = s, o => DefaultSource = o);
             }
         }
 
@@ -122,7 +121,6 @@ namespace Stripe
         /// The customer’s payment sources, if any
         /// </summary>
         [JsonProperty("sources")]
-        [JsonConverter(typeof(SourceListConverter))]
         public StripeList<Source> Sources { get; set; }
 
         /// <summary>

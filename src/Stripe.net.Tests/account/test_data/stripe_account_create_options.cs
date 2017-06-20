@@ -11,12 +11,13 @@ namespace Stripe.Tests.test_data
                 BusinessName = "created-business-name-" + Guid.NewGuid(),
                 BusinessPrimaryColor = "#" + new Random().Next(0, 6).ToString("D6"),
                 BusinessUrl = "http://created.com/" + Guid.NewGuid(),
+                Country = "US",
                 DebitNegativeBalances = true,
                 DeclineChargeOnAvsFailure = false,
                 DeclineChargeOnCvcFailure = true,
                 DefaultCurrency = "usd",
                 Email = $"Debra{Guid.NewGuid()}@gmail.com",
-                Managed = true,
+                Type = StripeAccountType.Custom,
 
                 ExternalCardAccount = new StripeAccountCardOptions()
                 {
@@ -27,8 +28,8 @@ namespace Stripe.Tests.test_data
                     AddressState = "NC",
                     AddressZip = "27617",
                     Cvc = "1223",
-                    ExpirationMonth = "10",
-                    ExpirationYear = "2021",
+                    ExpirationMonth = 10,
+                    ExpirationYear = 2021,
                     Name = "Joe Meatballs",
                     Number = "4000056655665556",
                     Currency = "usd",
@@ -48,7 +49,7 @@ namespace Stripe.Tests.test_data
                 DeclineChargeOnAvsFailure = false,
                 DeclineChargeOnCvcFailure = true,
                 DefaultCurrency = "usd",
-                Managed = true,
+                Type = StripeAccountType.Custom,
 
                 ExternalBankAccount = new StripeAccountBankAccountOptions()
                 {

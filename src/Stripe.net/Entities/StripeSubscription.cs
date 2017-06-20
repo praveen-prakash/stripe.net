@@ -43,7 +43,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeCustomer>.Map(value, s => CustomerId = s, o => Customer = o);
+                StringOrObject<StripeCustomer>.Map(value, s => CustomerId = s, o => Customer = o);
             }
         }
         #endregion
@@ -62,7 +62,7 @@ namespace Stripe
         public StripePlan StripePlan { get; set; }
 
         [JsonProperty("quantity")]
-        public int Quantity { get; set; }
+        public int? Quantity { get; set; }
 
         [JsonProperty("start")]
         [JsonConverter(typeof(StripeDateTimeConverter))]
@@ -70,6 +70,9 @@ namespace Stripe
 
         [JsonProperty("status")]
         public string Status { get; set; }
+
+        [JsonProperty("items")]
+        public StripeList<StripeSubscriptionItem> Items { get; set; }
 
         [JsonProperty("tax_percent")]
         public decimal? TaxPercent { get; set; }

@@ -23,7 +23,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeAccount>.Map(value, s => AccountId = s, o => Account = o);
+                StringOrObject<StripeAccount>.Map(value, s => AccountId = s, o => Account = o);
             }
         }
         #endregion
@@ -31,8 +31,24 @@ namespace Stripe
         [JsonProperty("amount")]
         public int Amount { get; set; }
 
-        [JsonProperty("application")]
+        [JsonProperty("amount_refunded")]
+        public int AmountRefunded { get; set; }
+
+        #region Expandable Application
         public string ApplicationId { get; set; }
+
+        [JsonIgnore]
+        public StripeApplication Application { get; set; }
+
+        [JsonProperty("application")]
+        internal object InternalApplication
+        {
+            set
+            {
+                StringOrObject<StripeApplication>.Map(value, s => ApplicationId = s, o => Application = o);
+            }
+        }
+        #endregion
 
         #region Expandable Balance Transaction
         public string BalanceTransactionId { get; set; }
@@ -45,23 +61,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeBalanceTransaction>.Map(value, s => BalanceTransactionId = s, o => BalanceTransaction = o);
-            }
-        }
-        #endregion
-
-        #region Expandable Card
-        public string CardId { get; set; }
-
-        [JsonIgnore]
-        public StripeCard Card { get; set; }
-
-        [JsonProperty("card")]
-        internal object InternalCard
-        {
-            set
-            {
-                ExpandableProperty<StripeCard>.Map(value, s => CardId = s, o => Card = o);
+                StringOrObject<StripeBalanceTransaction>.Map(value, s => BalanceTransactionId = s, o => BalanceTransaction = o);
             }
         }
         #endregion
@@ -77,7 +77,7 @@ namespace Stripe
         {
             set
             {
-                ExpandableProperty<StripeCharge>.Map(value, s => ChargeId = s, o => Charge = o);
+                StringOrObject<StripeCharge>.Map(value, s => ChargeId = s, o => Charge = o);
             }
         }
         #endregion
@@ -89,13 +89,26 @@ namespace Stripe
         [JsonProperty("currency")]
         public string Currency { get; set; }
 
+        #region Expandable Originating Transaction
+        public string OriginatingTransactionId { get; set; }
+
+        [JsonIgnore]
+        public StripeCharge OriginatingTransaction { get; set; }
+
+        [JsonProperty("originating_transaction")]
+        internal object InternalOriginatingTransaction
+        {
+            set
+            {
+                StringOrObject<StripeCharge>.Map(value, s => OriginatingTransactionId = s, o => OriginatingTransaction = o);
+            }
+        }
+        #endregion
+
         [JsonProperty("refunded")]
         public bool Refunded { get; set; }
 
         [JsonProperty("refunds")]
         public StripeList<StripeApplicationFeeRefund> StripeApplicationFeeRefundList { get; set; }
-
-        [JsonProperty("amount_refunded")]
-        public int AmountRefunded { get; set; }
     }
 }

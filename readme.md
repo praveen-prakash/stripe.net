@@ -1,6 +1,6 @@
 ![Stripe](https://stripe.com/img/navigation/logo.png?2)  
 [![Build status](https://ci.appveyor.com/api/projects/status/5kje1md0hltqfpyh/branch/master?svg=true)](https://ci.appveyor.com/project/JaymeDavis/stripe-net/branch/master)  
-[![ready](https://badge.waffle.io/jaymedavis/stripe.net.svg?label=ready&title=ready)](http://waffle.io/jaymedavis/stripe.net)
+[![waiting for release](https://badge.waffle.io/jaymedavis/stripe.net.svg?label=waiting%20for%20release&title=waiting%20for%20release)](http://waffle.io/jaymedavis/stripe.net)  
 
 **Stripe Services**
 
@@ -22,13 +22,16 @@
 [Invoices](#invoices)  
 [Invoice Items](#invoice-items)  
 [OAuth](#stripe-connect) (see stripe connect)  
+[Payouts](#payouts)  
 [Plans](#plans)  
 [Radar](#radar)  
-[Recipients](#recipients)  
 [Refunds](#refunds)  
+[Sources](#sources)  
 [Subscriptions](#subscriptions)  
+[Subscription Items](#subscription-items)  
 [Tokens](#tokens)  
 [Transfers](#transfers)  
+[Transfer Reversals](#transfer-reversals)  
 
 **Features**
 
@@ -53,33 +56,23 @@ If it has, please leave a comment or a [reaction](https://github.com/blog/2119-a
 Quick Start
 -----------
 
-It is recommended that you install Stripe.net via NuGet `nuget install Stripe.net`.
+Install Stripe.net via NuGet `nuget install Stripe.net`
 
-Next you will need to provide Stripe.net with your api key. There are 4 ways to do this:
+Provide Stripe.net with your api key - there are a couple of ways to do this:
 
-a) Add an AppSetting with your api key to your config (this is the easiest way and will work throughout the app on every request) - will not work on portable platforms
-
-```xml
-	<appSettings>
-	...
-		<add key="StripeApiKey" value="[your api key here]" />
-	...
-	</appSettings>
-```
-
-b) In your application initialization, call this method (this is a programmatic way, but you only have to do it once during startup)
+a) In your application initialization, call this function (you only have to do it once during startup):
 
 ```csharp
 	StripeConfiguration.SetApiKey("[your api key here]");
 ```
 
-c) In any of the service constructors, you can optionally pass the api key (will be assigned that apikey for the life of the service instance).
+b) pass the api key to any of the services when you create them:
 
 ```csharp
 	var planService = new StripePlanService("[your api key here]");
 ```
 
-d) In any of the service calls, you can pass a [StripeRequestOptions](#striperequestoptions) object with the apikey specified.
+c) pass the api key to a [StripeRequestOptions](#striperequestoptions):
 
 ```csharp
 	var planService = new StripePlanService();
@@ -98,7 +91,7 @@ There is a course made by Craig McKeachie - find it here:
 Stripe Response
 ---------------
 
-The [`StripeResponse`](./src/Stripe/Infrastructure/public/StripeResponse.cs) object is a property (with the same name) attached to all entities in Stripe.net when they are returned from a service call.
+The [`StripeResponse`](./src/Stripe.net/Infrastructure/public/StripeResponse.cs) object is a property (with the same name) attached to all entities in Stripe.net when they are returned from a service call.
 
 e.g. `var charge = new StripeChargeService().Create(...)` - when you access `charge.StripeResponse`, this object will be available. The object is documented below with useful tips on each property.
 
@@ -132,15 +125,15 @@ Accounts
 --------
 ### Creating an account
 
-When creating an account, you can create a standalone or managed account. Standalone accounts are managed by Stripe and the account owner directly. Managed accounts are handled by your platform. See the Stripe documentation for more information.
+When creating an account, you can create a Standard or Custom account. Standard accounts are managed by Stripe and the account owner directly. Custom accounts are handled by your platform. See the Stripe documentation for more information.
 
 Since Stripe returns `ExternalAccounts` as a single array (contains StripeCard's and/or StripeBankAccount's), that type is a dynamic StripeList. These are split up as `ExternalCards` and `ExternalBankAccounts` for your convenience.
 
 ```csharp
 	var account = new StripeAccountCreateOptions();
-	account.Email = "jayme@yoyoyo.com"  // this is required if it is not a managed account. the user is emailed on standalone accounts,
-	                                    // it's only used for reference on managed accounts
-	account.Managed = false;            // set this to true if you want a managed account (email is not required if this is set to true)
+	account.Email = "jayme@yoyoyo.com"  // this is required for a Standard account as the owner gets emails from Stripe.
+	                                    // it's only used for reference on Custom accounts
+	account.Type = StripeAccountType.Custom;            // this can be "custom" or "standard". Express accounts are not created via the API.
 
 	// a few optional settings
 	account.Country = "US"                                 // defaults to your country
@@ -185,6 +178,15 @@ Updating an account has almost all the same available properties as creating an 
 ```
 
 [StripeListOptions](#stripelistoptions-paging) for paging
+
+### Creating a login link
+
+When managing Express accounts, you can allow the owner to log into their dashboard by creating a login link for them.
+
+```csharp
+	var loginLinkService = new StripeLoginLinkService();
+	StripeLoginLink loginLink = loginLinkService.Create(*accountId*);
+```
 
 Application Fees
 ----------------
@@ -346,8 +348,8 @@ With a card:
 	myCard.SourceCard = new SourceCard()
 	{
 		Number = "4242424242424242",
-		ExpirationYear = "2022",
-		ExpirationMonth = "10",
+		ExpirationYear = 2022,
+		ExpirationMonth = 10,
 		AddressCountry = "US",                // optional
 		AddressLine1 = "24 Beef Flank St",    // optional
 		AddressLine2 = "Apt 24",              // optional
@@ -375,8 +377,8 @@ With a card:
 	var myCard = new StripeCardUpdateOptions();
 
 	myCard.Name = "Cardy MyCardson"
-	myCard.ExpirationYear = "2016";
-	myCard.ExpirationMonth = "10";
+	myCard.ExpirationYear = 2016;
+	myCard.ExpirationMonth = 10;
 	myCard.AddressCountry = "US";
 	myCard.AddressLine1 = "1234 ComeOnBabySayYouLoveMe St";
 	myCard.AddressLine2 = "";
@@ -454,8 +456,8 @@ With a card:
 	myCharge.SourceCard = new SourceCard()
 	{
 		Number = "4242424242424242",
-		ExpirationYear = "2022",
-		ExpirationMonth = "10",
+		ExpirationYear = 2022,
+		ExpirationMonth = 10,
 		AddressCountry = "US",                // optional
 		AddressLine1 = "24 Beef Flank St",    // optional
 		AddressLine2 = "Apt 24",              // optional
@@ -659,8 +661,8 @@ With a card:
 	myCustomer.SourceCard = new SourceCard()
 	{
 		Number = "4242424242424242",
-		ExpirationYear = "2022",
-		ExpirationMonth = "10",
+		ExpirationYear = 2022,
+		ExpirationMonth = 10,
 		AddressCountry = "US",                // optional
 		AddressLine1 = "24 Beef Flank St",    // optional
 		AddressLine2 = "Apt 24",              // optional
@@ -714,8 +716,8 @@ With a card:
 		// set these properties if you set TokenId)
 		Object = "card",
 		Number = "4242424242424242",
-		ExpirationYear = "2022",
-		ExpirationMonth = "10",
+		ExpirationYear = 2022,
+		ExpirationMonth = 10,
 		AddressCountry = "US",                // optional
 		AddressLine1 = "24 Beef Flank St",    // optional
 		AddressLine2 = "Apt 24",              // optional
@@ -777,11 +779,20 @@ Disputes
 Events
 ------
 
-Stripe sends Events (via webhooks) whenever an associated action occurs. The list of events Stripe sends is documented here: https://stripe.com/docs/api#event_types
+Stripe sends Events (webhooks) whenever an associated action occurs. The events sent are [documented here](https://stripe.com/docs/api#event_types) and available via code as `StripeEvents`. There are a couple of ways to process events: 
+```StripeEventUtility.ParseEvent(json)``` and ```StripeEventUtility.ConstructEvent(json, Request.Headers["Stripe-Signature"], secret, tolerance **optional**)```. Using `ParseEvent` will immediately parse the event into a StripeEvent, while 
+`ConstructEvent` will verify the event using your secret from the dashboard and comparing the signature. You can also pass an optional tolerance 
+which is the number of seconds you allow before the event is invalidated.
+
+[Configure your webhook urls](https://dashboard.stripe.com/account/webhooks) first, so Stripe knows where to send the data.
 
 ### Receiving events from Stripe
 
-1) In your application, create a handler that looks something like the below:
+a) Use a Controller (recommended)
+
+[See here](https://github.com/jaymedavis/stripe.net/issues/818#issuecomment-293068650)
+
+b) Create a handler that looks something like the below:
 
 ```csharp
 	namespace TheBestApplicationEverCreated
@@ -809,14 +820,11 @@ Stripe sends Events (via webhooks) whenever an associated action occurs. The lis
 		}
 	}
 ```
-
-2) Create a StripeHandler.ashx in the root of your website (or wherever) that looks like this:
+c) Create a StripeHandler.ashx in the root of your website (or wherever) that looks like this:
 
 ```xml
 	<%@ WebHandler Language="C#" Class="StripeHandler" CodeBehind="StripeHandler.cs" %>
 ```
-
-3) Login to Stripe and go to Account Settings, webhooks - from here, you can setup the url that points to your StripeHandler.ashx for testing.
 
 Whenever an Event is received, StripeEventUtility.ParseEvent(json) will convert the response into a *StripeEvent* object.
 
@@ -871,7 +879,7 @@ File Uploads
 
 ### Creating a file upload
 
-When setting the Purpose of a file, all available options are listed as constants in [StripeFilePurpose](src/Stripe/Constants/StripeFilePurpose.cs).
+When setting the Purpose of a file, all available options are listed as constants in [StripeFilePurpose](src/Stripe.net/Constants/StripeFilePurpose.cs).
 
 ```csharp
 	var fileService = new StripeFileUploadService();
@@ -1007,6 +1015,43 @@ Various calls allow attaching metadata to them such as [Creating a Customer](#cr
 
 To delete metadata you can call the update operation and pass an empty string (`String.Empty`) or `null` for each value you want to delete.
 
+Payouts
+-------
+
+### Creating a payout
+
+This will create a payout to the account you setup when activating your Stripe account.
+
+```csharp
+	var payout = new StripePayoutService(*apikey*).Create(
+		new StripePayoutCreateOptions
+		{
+			Amount = 1000,
+			Currency = "usd"
+		}
+	);
+```
+
+### Retrieving a payout
+
+```csharp
+	var payout = new StripePayoutService(*apiKey*).Get(*payoutId*);
+```
+
+### List all payouts
+
+```csharp
+	var payouts = new StripePayoutService(*apiKey*).List(
+		new StripePayoutListOptions
+		{
+			Created = DateTime.SomeDay,
+			ArrivalDate = DateTime.SomeDay
+		};
+	);
+```
+
+[StripeListOptions](#stripelistoptions-paging) for paging, and a [StripeDateFilter](#stripedatefilter-date-filtering) for date filtering (on both the created and date fields)
+
 Plans
 -----
 
@@ -1077,7 +1122,7 @@ In Stripe.net, once a payment has been processed via Radar, it adds the `Review`
 Some example code (in test mode) that will create and expand a review:
 
 ```csharp
-	// a token from expiration month "06", expiration year "2020", and card "4000000000009235"
+	// a token from expiration month 6, expiration year 2020, and card "4000000000009235"
 	var token = "tkn_12345"; 
 	
 	var service = new StripeChargeService();
@@ -1090,65 +1135,6 @@ Some example code (in test mode) that will create and expand a review:
 ```
 
 **Read the docs for the radar review object to see the reasons a review is open or closed [here](https://stripe.com/docs/api#reviews)**
-
-Recipients
-----------
-
-**Note: recipients have been deprecated by Stripe - please use [Stripe Connnect](https://stripe.com/docs/connect) instead**
-
-### Creating a recipient
-
-```csharp
-	var myRecipient = new StripeRecipientCreateOptions();
-	myRecipient.Name = "Bacon Industries Limited";
-	myRecipient.Type = "individual";                                        // "corporation" is also valid here.
-	myRecipient.TaxId = "000000000";                                        // optional
-	myRecipient.Email = "bacon@example.com";                                // optional
-	myRecipient.Description = "Bacon Industries Ltd. (bacon@example.com)";  //optional
-
-	// create a token OR card via SourceToken or SourceCard (see above examples)
-
-	var recipientService = new StripeRecipientService();
-	StripeRecipient stripeRecipient = recipientService.Create(myRecipient);
-```
-
-### Updating a recipient
-
-```csharp
-	var myRecipient = new StripeRecipientUpdateOptions();
-	myRecipient.Name = "Bacon Industries Limited";
-	myRecipient.TaxId = "000000000";                                        // optional
-	myRecipient.Email = "bacon@example.com";                                // optional
-	myRecipient.Description = "Bacon Industries Ltd. (bacon@example.com)";  // optional
-
-	// update a token OR card via SourceToken or SourceCard (see above examples)
-
-	var recipientService = new StripeRecipientService();
-	StripeRecipient stripeRecipient = recipientService.Update(*recipientId*, myRecipient);
-```
-
-### Retrieving a recipient
-
-```csharp
-	var recipientService = new StripeRecipientService();
-	StripeRecipient stripeRecipient = recipientService.Get(*recipientId*);
-```
-
-### Deleting a recipient
-
-```csharp
-	var recipientService = new StripeRecipientService();
-	recipientService.Deleted(*recipientId*);
-```
-
-### List all recipients
-
-```csharp
-	var recipientService = new StripeRecipientService();
-	IEnumerable<StripeRecipient> response = recipientService.List(); // optional StripeRecipientListOptions
-```
-
-StripeRecipientListOptions supports a verified flag and [StripeListOptions](#stripelistoptions-paging) for paging
 
 Refunds
 -------
@@ -1196,6 +1182,51 @@ You can also specify Metadata, RefundApplicationFee (Connect Only), and ReverseT
 
 StripeRefundListOptions supports ChargeId and [StripeListOptions](#stripelistoptions-paging) for paging
 
+Sources
+-------
+
+Before working with sources, I would recommend you read [Getting Started with Sources](https://stripe.com/docs/sources). Sources allow 
+you to use a common integration for multiple payment types.
+
+### Creating a source
+
+```csharp
+var source = new StripeSourceService().Create(
+	new StripeSourceCreateOptions
+	{
+		Type = StripeSourceType.Bitcoin,
+		Amount = 1,
+		Currency = "usd",
+		Owner = new StripeSourceOwner
+		{
+			Email = "jimmy@hendrix.com",
+			CityOrTown = "Mayberry",
+			State = "NC"
+		}
+	}
+);
+```
+
+### Updating a source
+
+```csharp
+var source = new StripeSourceService().Update(*sourceId*,
+	new StripeSourceUpdateOptions
+	{
+		Owner = new StripeSourceOwner
+		{
+			Email = "hendrix@hjimmy.com"
+		}
+	}
+);
+```
+
+### Retrieving a source
+
+```csharp
+var source = new StripeSourceService().Get(*sourceId*);
+```
+
 Subscriptions
 -------------
 
@@ -1236,6 +1267,53 @@ Subscriptions
 
 [StripeListOptions](#stripelistoptions-paging) for paging
 
+Subscription Items
+------------------
+
+### Creating a subscription item
+
+```csharp
+	var subscriptionItem = new StripeSubscriptionItemService().Create(
+		new StripeSubscriptionItemCreateOptions
+		{
+			SubscriptionId = *subscriptionId*,  // required!
+			PlanId = *planId*,                  // required!
+			Quantity = 1
+		};
+	);
+```
+
+### Updating a subscription item
+
+```csharp
+	var subscriptionItem = new StripeSubscriptionItemService().Update(
+		*subscriptionItemId*,
+		new StripeSubscriptionItemUpdateOptions
+		{
+			Quantity = 2
+		};
+	);
+```
+
+### Retrieving a subscription item
+
+```csharp
+var subscriptionItem = new StripeSubscriptionItemService().Get(*subscriptionItemId*);
+```
+
+### List all subscription items
+
+```csharp
+	var subscriptionItems = new StripeSubscriptionItemService().List(
+		new StripeSubscriptionItemListOptions
+		{ 
+			SubscriptionId = *subscriptionId* 
+		}
+	);
+```
+
+[StripeListOptions](#stripelistoptions-paging) for paging
+
 Tokens
 ------
 
@@ -1266,8 +1344,8 @@ tokens on your server.
 		// set these properties if passing full card details (do not
 		// set these properties if you set TokenId)
 		Number = "4242424242424242",
-		ExpirationYear = "2022",
-		ExpirationMonth = "10",
+		ExpirationYear = 2022,
+		ExpirationMonth = 10,
 		AddressCountry = "US",                // optional
 		AddressLine1 = "24 Beef Flank St",    // optional
 		AddressLine2 = "Apt 24",              // optional
@@ -1294,16 +1372,15 @@ tokens on your server.
 
 Transfers
 ---------
+Transfers are for sending funds to another account inside stripe.
 
-### Creating a transfer to a recipient
+### Creating a transfer
 
 ```csharp
 	var myTransfer = new StripeTransferCreateOptions();
 	myTransfer.Amount = 100;
 	myTransfer.Currency = "usd";
-	myTransfer.Recipient = "*recipientId*";          // can also be "self" if you want to send to your own account
-	myTransfer.Description = "Sales Week #42";       // optional
-	myTransfer.StatementDescription = "Commissions"; // optional
+	myTransfer.Destination = *someAccountId*;
 
 	var transferService = new StripeTransferService();
 	StripeTransfer stripeTransfer = transferService.Create(myTransfer);
@@ -1330,7 +1407,46 @@ Transfers
 	IEnumerable<StripeTransfer> response = transferService.List(); // optional StripeTransferListOptions
 ```
 
-StripeTransferListOptions supports a RecipientId, Status ('pending', 'paid' or 'failed'), [StripeListOptions](#stripelistoptions-paging) for paging, and a [StripeDateFilter](#stripedatefilter-date-filtering) for date filtering (on both the created and date fields)
+Transfer Reversals
+------------------
+A previously created transfer can be reversed if it has not yet been paid out.
+
+### Creating a transfer reversal
+
+```csharp
+	var myTransferReversal = new StripeTransferReversalCreateOptions();
+	myTransferReversal.Amount = 100;
+	myTransferReversal.Description = "test";    // not required
+
+	var transferReversalService = new StripeTransferReversalService();
+	StripeTransferReversal stripeTransferReversal = transferReversalService.Create(*transferId*, myTransferReversal);
+```
+
+### Updating a transfer reversal
+
+```csharp
+	var myTransferReversal = new StripeTransferReversalUpdateOptions();
+	myTransferReversal.Metadata = new Dictionary<string, string> { { "some-key", "some-value" } };
+
+	var transferReversalService = new StripeTransferReversalService();
+	StripeTransferReversal stripeTransferReversal = transferReversalService.Update(*transferId*, *reversalId*, myTransferReversal);
+```
+
+### Retrieving a transfer reversal
+
+```csharp
+	var transferReversalService = new StripeTransferReversalService();
+	StripeTransferReversal stripeTransferReversal = transferReversalService.Get(*transferId*, *reversalId*);
+```
+
+### List all reversals of a transfer
+
+```csharp
+	var transferReversalService = new StripeTransferReversalService();
+	IEnumerable<StripeTransferReversal> response = transferReversalService.List(); // optional StripeListOptions
+```
+
+[StripeListOptions](#stripelistoptions-paging) for paging, and a [StripeDateFilter](#stripedatefilter-date-filtering) for date filtering (on both the created and date fields)
 
 StripeDateFilter (date filtering)
 ---------------------------------

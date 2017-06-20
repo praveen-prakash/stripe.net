@@ -11,6 +11,9 @@ namespace Stripe
         [JsonProperty("data")]
         public List<T> Data { get; set; }
 
+        /// <summary>
+        /// This field is only valid in the context of paging.
+        /// </summary>
         [JsonProperty("has_more")]
         public bool HasMore { get; set; }
 

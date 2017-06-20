@@ -50,14 +50,10 @@ namespace Stripe
         public string Email { get; set; }
 
         [JsonProperty("external_accounts")]
-        [JsonConverter(typeof(SourceListConverter))]
         public StripeList<Source> ExternalAccounts { get; set; }
 
         [JsonProperty("legal_entity")]
         public StripeLegalEntity LegalEntity { get; set; }
-
-        [JsonProperty("managed")]
-        public bool Managed { get; set; }
 
         [JsonProperty("metadata")]
         public Dictionary<string, string> Metadata { get; set; }
@@ -67,9 +63,6 @@ namespace Stripe
 
         [JsonProperty("statement_descriptor")]
         public string StatementDescriptor { get; set; }
-
-        [JsonProperty("transfer_statement_descriptor")]
-        public string TransferStatementDescriptor { get; set; }
         
         [JsonProperty("support_email")]
         public string SupportEmail { get; set; }
@@ -86,16 +79,22 @@ namespace Stripe
         [JsonProperty("tos_acceptance")]
         public StripeTermsOfServiceAcceptance TermsOfServiceAcceptance { get; set; }
 
-        [JsonProperty("transfer_schedule")]
-        public StripeTransferSchedule TransferSchedule { get; set; }
+        [JsonProperty("type")]
+        public string Type { get; set; }
 
-        [JsonProperty("transfers_enabled")]
-        public bool TransfersEnabled { get; set; }
+        [JsonProperty("payouts_enabled")]
+        public bool PayoutsEnabled { get; set; }
+
+        [JsonProperty("payout_schedule")]
+        public StripePayoutSchedule PayoutSchedule { get; set; }
+
+        [JsonProperty("payout_statement_descriptor")]
+        public string PayoutStatementDescriptor { get; set; }
 
         [JsonProperty("verification")]
         public StripeAccountVerification AccountVerification { get; set; }
 
         [JsonProperty("keys")]
-        public StripeManagedAccountKeys ManagedAccountKeys { get; set; }
+        public StripeCustomAccountKeys CustomAccountKeys { get; set; }
      }
 }

@@ -14,10 +14,10 @@ namespace Stripe.Tests
         Establish context = () =>
         {
             _stripeAccountService = new StripeAccountService();
-            var stripeAccountCreateOptions = test_data.stripe_account_create_options.ValidAccountWithCard();
+            var stripeAccountCreateOptions = test_data.stripe_account_create_options.ValidAccountWithBankAccount();
             stripeAccountCreateOptions.Country = "US";
             stripeAccountCreateOptions.Email = "joe" + Guid.NewGuid() + "@blahblah.com";
-            stripeAccountCreateOptions.Managed = true;
+            stripeAccountCreateOptions.Type = StripeAccountType.Custom;
 
             _initialAccount = _stripeAccountService.Create(stripeAccountCreateOptions);
 

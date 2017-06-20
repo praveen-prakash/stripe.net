@@ -4,24 +4,23 @@ using Machine.Specifications;
 
 namespace Stripe.Tests
 {
-    public class when_creating_a_managed_account_with_a_bank_account
+    public class when_creating_a_custom_account_with_a_bank_account
     {
         protected static StripeAccountCreateOptions CreateOrUpdateOptions;
         protected static StripeAccount StripeAccount;
 
         private static StripeAccountService _stripeAccountService;
 
-        Establish context = () =>
+        private Establish context = () =>
         {
             _stripeAccountService = new StripeAccountService();
-            CreateOrUpdateOptions = test_data.stripe_account_create_options.ValidAccountWithBankAccount();
-            CreateOrUpdateOptions.Country = "US";
-            CreateOrUpdateOptions.Email = "joe" + Guid.NewGuid() + "@blahblah.com";
-            CreateOrUpdateOptions.Managed = true;
+
+            Cache.GetCustomAccountWithBankAccount();
+            CreateOrUpdateOptions = Cache.CustomAccountWithBankAccountOptions;
         };
 
         Because of = () =>
-            StripeAccount = _stripeAccountService.Create(CreateOrUpdateOptions);
+            StripeAccount = Cache.GetCustomAccountWithBankAccount();
 
         It should_have_the_correct_country = () =>
             StripeAccount.Country.ShouldEqual(CreateOrUpdateOptions.Country);
@@ -29,8 +28,8 @@ namespace Stripe.Tests
         It should_have_the_correct_email = () =>
             StripeAccount.Email.ShouldEqual(CreateOrUpdateOptions.Email);
 
-        It should_be_a_managed_account = () =>
-            StripeAccount.Managed.ShouldEqual(true);
+        It should_be_a_custom_account = () =>
+            StripeAccount.Type.ShouldEqual("custom");
 
         It should_have_the_correct_external_account_info = () =>
         {
@@ -53,6 +52,9 @@ namespace Stripe.Tests
             StripeAccount.ExternalAccounts.Data.First().BankAccount.AccountHolderName.ShouldEqual(firstEntry.AccountHolderName);
         };
 
+#pragma warning disable 169, 414
         Behaves_like<account_behaviors> behaviors;
+#pragma warning restore 169, 414
+
     }
 }

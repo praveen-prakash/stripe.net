@@ -42,10 +42,20 @@ namespace Stripe
         [JsonProperty("description")]
         public string Description { get; set; }
 
-        [JsonProperty("source")]
-        public string Source { get; set; }
+        #region Expandable Source
+        public string SourceId { get; set; }
 
-        [JsonProperty("sourced_transfers")]
-        public StripeList<StripeTransfer> SourcedTransfers { get; set; }
+        [JsonIgnore]
+        public StripeSource Source { get; set; }
+
+        [JsonProperty("source")]
+        internal object InternalSource
+        {
+            set
+            {
+                StringOrObject<StripeSource>.Map(value, s => SourceId = s, o => Source = o);
+            }
+        }
+        #endregion
     }
 }

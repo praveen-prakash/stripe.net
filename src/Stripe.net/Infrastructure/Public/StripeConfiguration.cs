@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Reflection;
 using Stripe.Infrastructure;
 
@@ -6,16 +7,15 @@ namespace Stripe
 {
     public static class StripeConfiguration
     {
-        /// <summary>
-        /// If this isn't the latest version of the Stripe API, it's news to me.
-        /// </summary>
-        public static string StripeApiVersion = "2016-07-06";
-        public static string StripeNetVersion { get; private set; }
+        public static string StripeApiVersion = "2017-06-05";
+        public static string StripeNetVersion { get; }
 
         /// <summary>
         /// This option allows you to provide your own HttpMessageHandler. Useful with Android/iPhone.
         /// </summary>
         public static HttpMessageHandler HttpMessageHandler { get; set; } 
+
+        public static TimeSpan? HttpTimeSpan { get; set; }
 
         private static string _apiKey;
 

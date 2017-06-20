@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Machine.Specifications;
 
 namespace Stripe.Tests
@@ -15,7 +16,7 @@ namespace Stripe.Tests
             _stripeAccountCreateOptions = new StripeAccountCreateOptions()
             {
                 Email = "joe@" + Guid.NewGuid() + ".com",
-                Managed = true
+                Type = StripeAccountType.Custom
             };
             _stripeAccountId = _stripeAccountService.Create(_stripeAccountCreateOptions).Id;
         };
@@ -25,7 +26,14 @@ namespace Stripe.Tests
 
         It should_throw_exception_when_getting = () =>
         {
-            var exception = Catch.Exception(() => _stripeAccountService.Get(_stripeAccountId));
+            var exception = Catch.Exception(() =>
+                {
+                    var result = _stripeAccountService.Get(_stripeAccountId);
+
+                    Trace.WriteLine("request id: " + result.StripeResponse.RequestId);
+                }
+            );
+
             exception.Message.ShouldContain("or that account does not exist");
         };
     }

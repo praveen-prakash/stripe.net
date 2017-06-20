@@ -6,27 +6,16 @@ namespace Stripe.Tests
     public class when_creating_an_account_with_tos_acceptance
     {
         private static StripeAccount _stripeAccount;
-        private static StripeAccountService _stripeAccountService;
         private static StripeAccountCreateOptions _stripeAccountCreateOptions;
-        private static DateTime? _timestamp;
 
         Establish context = () =>
         {
-            _stripeAccountService = new StripeAccountService();
-            _timestamp = DateTime.UtcNow.Date;
-
-            _stripeAccountCreateOptions = new StripeAccountCreateOptions()
-            {
-                Email = "joe@" + Guid.NewGuid() + ".com",
-                Managed = true,
-                TosAcceptanceDate = _timestamp,
-                TosAcceptanceIp = "8.8.8.8",
-                TosAcceptanceUserAgent = "user-agent-7"
-            };
+            _stripeAccount = Cache.GetCustomAccountWithCard();
+            _stripeAccountCreateOptions = Cache.CustomAccountWithCardOptions;
         };
 
         Because of = () =>
-            _stripeAccount = _stripeAccountService.Create(_stripeAccountCreateOptions);
+            _stripeAccount = Cache.GetCustomAccountWithCard();
 
         It should_have_the_correct_email_address = () =>
             _stripeAccount.Email.ShouldEqual(_stripeAccountCreateOptions.Email);

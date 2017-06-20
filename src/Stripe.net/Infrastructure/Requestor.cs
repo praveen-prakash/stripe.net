@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -20,6 +21,9 @@ namespace Stripe.Infrastructure
                 StripeConfiguration.HttpMessageHandler != null
                     ? new HttpClient(StripeConfiguration.HttpMessageHandler)
                     : new HttpClient();
+
+            if (StripeConfiguration.HttpTimeSpan.HasValue)
+                HttpClient.Timeout = StripeConfiguration.HttpTimeSpan.Value;
         }
 
 
@@ -67,10 +71,11 @@ namespace Stripe.Infrastructure
             var response = HttpClient.SendAsync(requestMessage).Result;
             var responseText = response.Content.ReadAsStringAsync().Result;
 
-            if (response.IsSuccessStatusCode)
-                return BuildResponseData(response, responseText);
+            var result = BuildResponseData(response, responseText);
 
-            throw BuildStripeException(response.StatusCode, requestMessage.RequestUri.AbsoluteUri, responseText);
+            if (response.IsSuccessStatusCode) return result;
+
+            throw BuildStripeException(result, response.StatusCode, requestMessage.RequestUri.AbsoluteUri, responseText);
         }
 
 
@@ -116,10 +121,12 @@ namespace Stripe.Infrastructure
         {
             var response = await HttpClient.SendAsync(requestMessage, cancellationToken);
 
-            if (response.IsSuccessStatusCode)
-                return BuildResponseData(response, await response.Content.ReadAsStringAsync());
+            var result = BuildResponseData(response, await response.Content.ReadAsStringAsync());
 
-            throw BuildStripeException(response.StatusCode, requestMessage.RequestUri.AbsoluteUri, await response.Content.ReadAsStringAsync());
+            if (response.IsSuccessStatusCode)
+                return result;
+
+            throw BuildStripeException(result, response.StatusCode, requestMessage.RequestUri.AbsoluteUri, await response.Content.ReadAsStringAsync());
         }
 
 
@@ -201,7 +208,7 @@ namespace Stripe.Infrastructure
             fileContent.Headers.ContentType = new MediaTypeHeaderValue(MimeTypes.GetMimeType(fileName));
 
             var multiPartContent =
-                new MultipartFormDataContent($"----------Upload: { DateTime.UtcNow.Ticks.ToString("x") }")
+                new MultipartFormDataContent($"----------Upload:{ DateTime.UtcNow.Ticks :x}")
                 {
                     { new StringContent(purpose), "\"purpose\"" },
                     fileContent
@@ -210,11 +217,11 @@ namespace Stripe.Infrastructure
             requestMessage.Content = multiPartContent;
         }
 
-        private static StripeException BuildStripeException(HttpStatusCode statusCode, string requestUri, string responseContent)
+        private static StripeException BuildStripeException(StripeResponse response, HttpStatusCode statusCode, string requestUri, string responseContent)
         {
             var stripeError = requestUri.Contains("oauth") 
-                ? Mapper<StripeError>.MapFromJson(responseContent) 
-                : Mapper<StripeError>.MapFromJson(responseContent, "error");
+                ? Mapper<StripeError>.MapFromJson(responseContent, null, response) 
+                : Mapper<StripeError>.MapFromJson(responseContent, "error", response);
 
             return new StripeException(statusCode, stripeError, stripeError.Message);
         }
@@ -223,8 +230,8 @@ namespace Stripe.Infrastructure
         {
             var result = new StripeResponse
             {
-                RequestId = response.Headers.GetValues("Request-Id").First(),
-                RequestDate = Convert.ToDateTime(response.Headers.GetValues("Date").First()),
+                RequestId = response.Headers.Contains("Request-Id") ? response.Headers.GetValues("Request-Id").First() : "n/a",
+                RequestDate = Convert.ToDateTime(response.Headers.GetValues("Date").First(), CultureInfo.InvariantCulture),
                 ResponseJson = responseText
             };
 

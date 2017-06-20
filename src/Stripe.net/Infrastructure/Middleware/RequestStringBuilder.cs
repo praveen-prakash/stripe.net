@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using System.Reflection;
 using Newtonsoft.Json;
@@ -13,13 +14,18 @@ namespace Stripe.Infrastructure.Middleware
         {
             if (ParserPlugins != null) return;
 
-            // use reflection so this works on the bin directory later for additional plugin processing tools
-
+            // use reflection so this works on the bin directory?
             ParserPlugins = new List<IParserPlugin>
             {
                 new AdditionalOwnerPlugin(),
+                new ArrayPlugin(),
+                new DateFilterPlugin(),
                 new DictionaryPlugin(),
-                new DateFilterPlugin()
+                new IncludePlugin(),
+                new OrderItemsPlugin(),
+                new SubscriptionItemPlugin(),
+                new SubscriptionItemUpdatedPlugin(),
+                new InvoiceSubscriptionItemPlugin()
             };
         }
 
@@ -34,7 +40,7 @@ namespace Stripe.Infrastructure.Middleware
             }
 
             if (!parsedParameter)
-                ApplyParameterToRequestString(ref requestString, attribute.PropertyName, propertyValue.ToString());
+                ApplyParameterToRequestString(ref requestString, attribute.PropertyName, string.Format(CultureInfo.InvariantCulture, "{0}", propertyValue));
         }
 
         public static void ApplyParameterToRequestString(ref string requestString, string argument, string value)
